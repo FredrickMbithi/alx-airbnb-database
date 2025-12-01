@@ -9,8 +9,9 @@ This document analyzes and optimizes a complex query that retrieves booking info
 ## 1. Initial Query Analysis
 
 ### Original Query
+
 ```sql
-SELECT 
+SELECT
     b.booking_id,
     b.start_date,
     b.end_date,
@@ -73,20 +74,24 @@ Execution Time: 18.50 ms
 ## 2. Optimization Strategies
 
 ### Strategy 1: Reduce Selected Columns
+
 - Remove unnecessary columns (e.g., `user_id`, `property_id` if not needed)
 - Avoid selecting large TEXT columns like `description` unless required
 - Concatenate related fields to reduce column count
 
 ### Strategy 2: Add Filtering with WHERE Clause
+
 - Filter by date range to utilize `idx_bookings_dates` index
 - Filter by status to reduce result set
 - Utilize indexed columns for filtering
 
 ### Strategy 3: Implement Pagination
+
 - Add `LIMIT` and `OFFSET` for paginated results
 - Reduces memory usage and response time
 
 ### Strategy 4: Ensure Proper Indexing
+
 - Verify foreign key indexes are in place
 - Consider composite indexes for common filter combinations
 
@@ -95,7 +100,7 @@ Execution Time: 18.50 ms
 ## 3. Optimized Query
 
 ```sql
-SELECT 
+SELECT
     b.booking_id,
     b.start_date,
     b.end_date,
@@ -140,34 +145,38 @@ Execution Time: 3.20 ms
 
 ## 4. Performance Comparison
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| Execution Time | 18.50 ms | 3.20 ms | **5.8x faster** |
-| Planning Time | 0.85 ms | 0.45 ms | 1.9x faster |
-| Rows Scanned | ~3,400 | ~600 | 5.7x fewer |
-| Scan Type | Sequential | Index | More efficient |
-| Result Set Width | 450 bytes | 180 bytes | 2.5x smaller |
+| Metric           | Before     | After     | Improvement     |
+| ---------------- | ---------- | --------- | --------------- |
+| Execution Time   | 18.50 ms   | 3.20 ms   | **5.8x faster** |
+| Planning Time    | 0.85 ms    | 0.45 ms   | 1.9x faster     |
+| Rows Scanned     | ~3,400     | ~600      | 5.7x fewer      |
+| Scan Type        | Sequential | Index     | More efficient  |
+| Result Set Width | 450 bytes  | 180 bytes | 2.5x smaller    |
 
 ---
 
 ## 5. Key Improvements Made
 
 ### 5.1 Column Selection
+
 - **Before**: 22 columns selected including TEXT fields
 - **After**: 12 essential columns with concatenated display fields
 - **Impact**: Reduced data transfer and memory usage
 
 ### 5.2 WHERE Clause Filtering
+
 - **Before**: No filtering (full table scan)
 - **After**: Date-based filtering using indexed column
 - **Impact**: Reduced rows processed, enabled index usage
 
 ### 5.3 Result Limiting
+
 - **Before**: Returns all matching rows
 - **After**: Limited to 100 rows with ordering
 - **Impact**: Faster response, lower memory usage
 
 ### 5.4 Join Optimization
+
 - **Before**: Hash joins with full table scans
 - **After**: Nested loop joins with index scans
 - **Impact**: More efficient for filtered result sets
@@ -179,6 +188,7 @@ Execution Time: 3.20 ms
 ### For Even Better Performance:
 
 1. **Materialized Views**: For frequently accessed aggregated data
+
    ```sql
    CREATE MATERIALIZED VIEW booking_summary AS
    SELECT ... (optimized query)
@@ -186,8 +196,9 @@ Execution Time: 3.20 ms
    ```
 
 2. **Covering Indexes**: Include frequently selected columns
+
    ```sql
-   CREATE INDEX idx_bookings_covering ON bookings(start_date) 
+   CREATE INDEX idx_bookings_covering ON bookings(start_date)
    INCLUDE (end_date, total_amount, status);
    ```
 
@@ -205,6 +216,7 @@ Execution Time: 3.20 ms
 ## 7. Conclusion
 
 The optimized query achieves a **5.8x performance improvement** through:
+
 - Strategic column selection
 - Effective use of indexes via WHERE clause
 - Result set limiting
